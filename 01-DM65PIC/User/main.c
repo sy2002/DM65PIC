@@ -65,7 +65,8 @@ int main(void)
         uint16_t GPIO_Pin;
     };
     
-    struct GPIO_Mapping Columns_C65[9] =
+    const char Size_ColMapping = 9;
+    struct GPIO_Mapping Columns_C65[Size_ColMapping] =
     {
         GPIOE, GPIO_Pin_9,      /* C0 */
         GPIOE, GPIO_Pin_10,     /* C1 */
@@ -78,7 +79,8 @@ int main(void)
         GPIOC, GPIO_Pin_1       /* C8 */
     };
     
-    struct GPIO_Mapping Rows_C65[11] =
+    const char Size_RowMapping = 11;
+    struct GPIO_Mapping Rows_C65[Size_RowMapping] =
     {
         GPIOE, GPIO_Pin_0,      /* R0 */
         GPIOE, GPIO_Pin_1,      /* R1 */
@@ -99,6 +101,8 @@ int main(void)
     const char ROW_CSR_LEFT = 10;
     const char NIBBLE_CSR_DOWN = 1;
     const char BIT_CSR_DOWN = 3;
+    const char NIBBLE_CSR_RIGHT = 0;
+    const char BIT_CSR_RIGHT = 2;
     const char NIBBLE_RIGHT_SHIFT = 13;
     const char BIT_RIGHT_SHIFT = 0;
     
@@ -115,12 +119,12 @@ int main(void)
        by checking, if the current from the column arrives at a certain row. That means, we configure
        all rows as outputs (no pullup/pulldown resistor) and all columns as inputs (pulldown resistor)
     */
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < Size_ColMapping; i++)
         TM_GPIO_Init(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < Size_RowMapping; i++)
         TM_GPIO_Init(Rows_C65[i].GPIOx, Rows_C65[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN, TM_GPIO_Speed_High);
      
-    /* Initialize outputs for communicating with the FPGA via GPIO port JB     
+    /* Initialize outputs for communicating with the FPGA via GPIO port JB for debugging    
         JB1  = PG8: clock; data must be valid before rising edge
         JB2  = PG9: start of sequece, set to 1 when the first nibble of a new 128bit sequence is presented
         JB3  = PG10: bit0 of output data nibble
@@ -206,6 +210,14 @@ int main(void)
             nibbles[NIBBLE_CSR_DOWN] = nibbles[NIBBLE_CSR_DOWN] | (1 << BIT_CSR_DOWN);
             nibbles[NIBBLE_RIGHT_SHIFT] = nibbles[NIBBLE_RIGHT_SHIFT] | (1 << BIT_RIGHT_SHIFT);
         }
+        Delay(1);
+        if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CSR_LEFT].GPIOx, Rows_C65[ROW_CSR_LEFT].GPIO_Pin) == 1)
+        {
+            /* CURSOR LEFT */
+            nibbles[NIBBLE_CSR_RIGHT] = nibbles[NIBBLE_CSR_RIGHT] | (1 << BIT_CSR_RIGHT);
+            nibbles[NIBBLE_RIGHT_SHIFT] = nibbles[NIBBLE_RIGHT_SHIFT] | (1 << BIT_RIGHT_SHIFT);
+        }
+        
                 
         /* transmit current keyboard state to FPGA */
         for (i = 0; i < 32; i++)
@@ -218,9 +230,9 @@ int main(void)
             FPGA_OUT(P_OUT_B2, (nibbles[i] & 0x04) ? 0 : 1);
             FPGA_OUT(P_OUT_B3, (nibbles[i] & 0x08) ? 0 : 1);
                             
-            Delay(32);            
+            Delay(1);            
             FPGA_OUT(P_CLOCK, 1);            
-            Delay(32);
+            Delay(1);
         }
     }
 }

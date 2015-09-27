@@ -8,8 +8,8 @@ Please visit www.mega65.org to learn more about it.
 
 ## DM65PIC Peripheral Interface Controller
 The DM65PIC is the peripheral interface controller for the MEGA65 computer.
-It is based on the STM32 F4 microcontroller. Here is a picture of some
-prototype version of our custom PCB:
+It is based on the [STM32F4 microcontroller](www.st.com/stm32f4).
+Here is a foto of some prototype version of our custom PCB:
 
 ![DM65PIC_PCBs](gfx/githubmdpic.jpg)
 
@@ -22,7 +22,7 @@ on YouTube: [https://youtu.be/5PpsEw80j3M](https://youtu.be/5PpsEw80j3M).
 
 ### Folder structure
 ```
-00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS  STM32 CMSIS and standard drivers
+00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS  STM32 CMSIS and standard peripheral drivers
 00-STM32F429_LIBRARIES                    Tilen Majerle's STM32F4 library
 01-DM65PIC                                The actual firmware for the DM65PIC
 eagle                                     Hardware design for the PCB
@@ -31,7 +31,7 @@ eagle                                     Hardware design for the PCB
 ### How to build
 We used the free version of [Keil uVision5](http://www.keil.com/uvision/).
 The free version is code-size constrained (32KB), but as our compiled firmware
-(including all the libs) is smaller then 32KB, the free version works fine.
+(including all the libs) is smaller than 32KB, the free version works fine.
 
 After having installed the Keil IDE, just double click or open the file
 `project.uvprojx` in the `01-DM65PIC` folder. As all paths are relative, you
@@ -41,9 +41,9 @@ should be able to build without further modifications.
 * [Paul Gardner-Stephen](http://c65gs.blogspot.de): MEGA65 main developer
 * [Deft](http://www.m-e-g-a.org/de/mega/profile): chief MEGA65 officer
 * doubleflash: DM65PIC hardware design
-* [sy2002](http://www.sy2002.de): DM65PIC firmware
+* [sy2002](http://www.sy2002.de): DM65PIC firmware in this GitHub repository
 
-Special thanks go to Tilen Majerle for supporting sy2002 in learning how to
-work with the STM32 toolchain and of course for creating the awesome
-[STM32F4 library](http://stm32f4-discovery.com) that we heavily used for
-creating the DM65PIC firmware.
+Special thanks go to [Tilen Majerle](https://github.com/MaJerle) for
+supporting sy2002 in learning how to work with the STM32 toolchain and of
+course for creating the awesome [STM32F4 library](http://stm32f4-discovery.com)
+that we heavily used for creating the DM65PIC firmware.
