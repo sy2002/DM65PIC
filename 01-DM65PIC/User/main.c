@@ -95,16 +95,26 @@ int main(void)
         GPIOC, GPIO_Pin_3       /* K2 special "row 10" used for scanning the CURSOR LEFT key */
     };
     
+    struct GPIO_Mapping Restore_C65 =
+    {
+        GPIOC, GPIO_Pin_15      /* RESTORE key */
+    };
     
+    
+    /* positions of special keys within the matrix */
     const char COL_CSR = 0;
     const char ROW_CSR_UP = 9;
     const char ROW_CSR_LEFT = 10;
+    
+    /* positions of special keys within the nibbles array */
     const char NIBBLE_CSR_DOWN = 1;
     const char BIT_CSR_DOWN = 3;
     const char NIBBLE_CSR_RIGHT = 0;
     const char BIT_CSR_RIGHT = 2;
     const char NIBBLE_RIGHT_SHIFT = 13;
     const char BIT_RIGHT_SHIFT = 0;
+    const char NIBBLE_RESTORE = 19;
+    const char BIT_RESTORE = 3;
     
     int i, col, row, nibble_cnt, bit_cnt;
             
@@ -123,10 +133,13 @@ int main(void)
         TM_GPIO_Init(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
     for (i = 0; i < Size_RowMapping; i++)
         TM_GPIO_Init(Rows_C65[i].GPIOx, Rows_C65[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN, TM_GPIO_Speed_High);
-     
+    
+    /* The RESTORE key is pulled to GND when pressed, so we need a pullup resistor */
+    TM_GPIO_Init(Restore_C65.GPIOx, Restore_C65.GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
+    
     /* Initialize outputs for communicating with the FPGA via GPIO port JB for debugging    
         JB1  = PG8: clock; data must be valid before rising edge
-        JB2  = PG9: start of sequece, set to 1 when the first nibble of a new 128bit sequence is presented
+        JB2  = PG9: start of sequence, set to 1 when the first nibble of a new 128bit sequence is presented
         JB3  = PG10: bit0 of output data nibble
         JB4  = PG11: bit1 of output data nibble
         JB7  = PG12: bit2 of output data nibble
@@ -154,9 +167,7 @@ int main(void)
     #define P_IN_B0     GPIO_Pin_6
     #define P_IN_B1     GPIO_Pin_7
     */
-    
-    #define FPGA_OUT(__pin, __value) TM_GPIO_SetPinValue(GPIOG, __pin, __value)
-    
+        
     /* initialize the pins for the FPGA GPIO communication */
     TM_GPIO_Init(GPIOG, P_CLOCK,  TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);
     TM_GPIO_Init(GPIOG, P_START,  TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);
@@ -169,6 +180,10 @@ int main(void)
     TM_GPIO_Init(GPIOG, P_IN_B1,  TM_GPIO_Mode_IN,  TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN,   TM_GPIO_Speed_High);
 */
 
+    /* convenience defines for a better readability */
+    #define FPGA_OUT(__pin, __value) TM_GPIO_SetPinValue(GPIOG, __pin, __value)    
+    #define DM_SET_BIT(__nibblepos, __bitpos) nibbles[(__nibblepos)] = nibbles[(__nibblepos)] | (1 << (__bitpos))
+    #define DM_CLR_BIT(__nibblepos, __bitpos) nibbles[(__nibblepos)] = nibbles[(__nibblepos)] & (~(1 << (__bitpos)))
     
     while(1)
     {
@@ -185,9 +200,9 @@ int main(void)
             for (row = 0; row < 8; row++)
             {
                 if (TM_GPIO_GetInputPinValue(Rows_C65[row].GPIOx, Rows_C65[row].GPIO_Pin) == 1)
-                    nibbles[nibble_cnt] = nibbles[nibble_cnt] | (1 << bit_cnt);
+                    DM_SET_BIT(nibble_cnt, bit_cnt);
                 else
-                    nibbles[nibble_cnt] = nibbles[nibble_cnt] & (~(1 << bit_cnt));
+                    DM_CLR_BIT(nibble_cnt, bit_cnt);
                 
                 bit_cnt++;
                 
@@ -207,18 +222,23 @@ int main(void)
         if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CSR_UP].GPIOx, Rows_C65[ROW_CSR_UP].GPIO_Pin) == 1)
         {
             /* CURSOR UP */
-            nibbles[NIBBLE_CSR_DOWN] = nibbles[NIBBLE_CSR_DOWN] | (1 << BIT_CSR_DOWN);
-            nibbles[NIBBLE_RIGHT_SHIFT] = nibbles[NIBBLE_RIGHT_SHIFT] | (1 << BIT_RIGHT_SHIFT);
+            DM_SET_BIT(NIBBLE_CSR_DOWN, BIT_CSR_DOWN);
+            DM_SET_BIT(NIBBLE_RIGHT_SHIFT, BIT_RIGHT_SHIFT);
         }
         Delay(1);
         if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CSR_LEFT].GPIOx, Rows_C65[ROW_CSR_LEFT].GPIO_Pin) == 1)
         {
             /* CURSOR LEFT */
-            nibbles[NIBBLE_CSR_RIGHT] = nibbles[NIBBLE_CSR_RIGHT] | (1 << BIT_CSR_RIGHT);
-            nibbles[NIBBLE_RIGHT_SHIFT] = nibbles[NIBBLE_RIGHT_SHIFT] | (1 << BIT_RIGHT_SHIFT);
+            DM_SET_BIT(NIBBLE_CSR_RIGHT, BIT_CSR_RIGHT);
+            DM_SET_BIT(NIBBLE_RIGHT_SHIFT, BIT_RIGHT_SHIFT);            
         }
         
-                
+        /* handle RESTORE key (inverse logic) */
+        if (TM_GPIO_GetInputPinValue(Restore_C65.GPIOx, Restore_C65.GPIO_Pin) == 0)
+            DM_SET_BIT(NIBBLE_RESTORE, BIT_RESTORE);
+        else
+            DM_CLR_BIT(NIBBLE_RESTORE, BIT_RESTORE);
+                        
         /* transmit current keyboard state to FPGA */
         for (i = 0; i < 32; i++)
         {

@@ -45,7 +45,7 @@ After having installed the Keil IDE, just double click or open the file
 `project.uvprojx` in the `01-DM65PIC` folder. As all paths are relative, you
 should be able to build without further modifications.
 
-### How the Commodore 65 keyboard interface works
+### How the interface works
 The DM65PIC is doing a matrix scan on the original Commodore 65 keyboard by
 letting current flow through the columns and then find out if a key is pressed
 by checking, if the current from the column arrives at a certain row. That
@@ -55,7 +55,8 @@ resistor).
 
 The following diagram is the basis for the matrix scan. It is taken from
 Commodore's original document
-[c65manual.txt](http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt).
+[c65manual.txt](http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt),
+chapter 2.1.2.
 
 ```
 
@@ -140,14 +141,36 @@ While scanning the matrix, the DM65PIC firmware stores the status of each
 single key in an array, that is then transmitted to the MEGA65 FPGA using
 the Nexys 4 DDR's General Purpose IO (GPIO) port "JB".
 
-The protocol between the DM65PIC and the FPGA works like this: 128bit are
-transmitted as 32 (4-bit) nibbles. Each nibble represents 4 bit within the
-above-mentioned matrix.
+The protocol between the DM65PIC and the FPGA works like this: Cyclically,
+128-bit are transmitted as 32 (4-bit) nibbles. Each nibble represents 4 bit
+within the above-mentioned matrix. Nibble #0 represents the keys INS/DEL,
+RET, HORZ/CRSR, F8/F7. Nibble #1 represents F2/F1, F4/F3, F6/F5, VERT/CRSR.
+And so on. Here is the full description of the data sequence:
 
-Here is the pin layout for the FPGA's "JB" port
+```
+nbls #0 - #17:   keyboard bits corresponding to the 9 columns of keys (see above)
+nbl #18:         joystick 1: bit0=left, bit1=right, bit2=up, bit3=down
+nbl #19:         bit0=joy1 fire, bit2=capslock key status, bit3=restore key status
+nbl #20:         joystick 2: bit0=left, bit1=right, bit2=up, bit3=down
+nbl #21:         bit0=joy3 fire, bit3=reset momentary-action switch status
+nbl #22 onwards: expansion port connector
+```
+
+
+The nibbles are transmitted by setting below-mentioned "bit0" .. "bit3" pins
+of the "JB" port and then clocking pin "JB1". For synchronizing the
+transmission, the "start of sequence" pin "JB2" is used as soon as a new
+128-bit package starts.
+
+The FPGA is also able to communicate back to the DM65PIC, i.e. for transmitting
+the LED status; but this is not supported, yet in the current version of the
+firmware.
+
+Here is the pin layout for the FPGA's "JB" port:
+
 ```
 JB1  = PG8:  clock; data must be valid before rising edge
-JB2  = PG9:  start of sequece, set to 1 when the first nibble of a new 128bit sequence is presented
+JB2  = PG9:  start of sequence, set to 1 when the first nibble of a new 128bit sequence is presented
 JB3  = PG10: bit0 of output data nibble
 JB4  = PG11: bit1 of output data nibble
 JB7  = PG12: bit2 of output data nibble
