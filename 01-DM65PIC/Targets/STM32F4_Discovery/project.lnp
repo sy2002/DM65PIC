@@ -1,0 +1,15 @@
+--cpu Cortex-M4.fp
+".\targets\stm32f4_discovery\startup_stm32f40_41xxx.o"
+".\targets\stm32f4_discovery\stm32f4xx_rcc.o"
+".\targets\stm32f4_discovery\stm32f4xx_gpio.o"
+".\targets\stm32f4_discovery\tm_stm32f4_gpio.o"
+".\targets\stm32f4_discovery\tm_stm32f4_stdio.o"
+".\targets\stm32f4_discovery\tm_stm32f4_swo.o"
+".\targets\stm32f4_discovery\tm_stm32f4_delay.o"
+".\targets\stm32f4_discovery\main.o"
+".\targets\stm32f4_discovery\stm32f4xx_it.o"
+".\targets\stm32f4_discovery\system_stm32f4xx.o"
+--strict --scatter ".\Targets\STM32F4_Discovery\project.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\project.map" -o .\Targets\STM32F4_Discovery\project.axf
