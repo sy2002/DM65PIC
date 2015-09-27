@@ -32,9 +32,12 @@ on YouTube: [https://youtu.be/5PpsEw80j3M](https://youtu.be/5PpsEw80j3M).
 ```
 00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS  STM32 CMSIS and standard peripheral drivers
 00-STM32F429_LIBRARIES                    Tilen Majerle's STM32F4 library
-01-DM65PIC                                The actual firmware for the DM65PIC
+01-DM65PIC                                Firmware for the DM65PIC
 eagle                                     Hardware design for the PCB
 ```
+
+The actual firmware is located within the file `main.c` in the folder
+`01-DM65PIC/01-DM65PIC/User`.
 
 ### How to build
 We used the free version of [Keil uVision5](http://www.keil.com/uvision/).
@@ -149,10 +152,10 @@ And so on. Here is the full description of the data sequence:
 
 ```
 nbls #0 - #17:   keyboard bits corresponding to the 9 columns of keys (see above)
-nbl #18:         joystick 1: bit0=left, bit1=right, bit2=up, bit3=down
+nbl #18:         joystick 1: bit0=up, bit1=down, bit2=left, bit3=right
 nbl #19:         bit0=joy1 fire, bit2=capslock key status, bit3=restore key status
-nbl #20:         joystick 2: bit0=left, bit1=right, bit2=up, bit3=down
-nbl #21:         bit0=joy3 fire, bit3=reset momentary-action switch status
+nbl #20:         joystick 2: bit0=up, bit1=down, bit2=left, bit3=right
+nbl #21:         bit0=joy2 fire, bit3=reset momentary-action switch status
 nbl #22 onwards: expansion port connector
 ```
 
@@ -170,7 +173,7 @@ Here is the pin layout for the FPGA's "JB" port:
 
 ```
 JB1  = PG8:  clock; data must be valid before rising edge
-JB2  = PG9:  start of sequence, set to 1 when the first nibble of a new 128bit sequence is presented
+JB2  = PG9:  start of sequence, set to 1 on first nibble of a new 128bit sequence
 JB3  = PG10: bit0 of output data nibble
 JB4  = PG11: bit1 of output data nibble
 JB7  = PG12: bit2 of output data nibble

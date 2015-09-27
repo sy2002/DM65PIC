@@ -53,7 +53,7 @@ int main(void)
         0x00,
         0x00,
         0x00,
-        0x00        
+        0x00       
     };
     
     
@@ -90,7 +90,7 @@ int main(void)
         GPIOE, GPIO_Pin_5,      /* R5 */
         GPIOE, GPIO_Pin_6,      /* R6 */
         GPIOE, GPIO_Pin_7,      /* R7 */
-        GPIOE, GPIO_Pin_8,      /* R8 */
+        GPIOE, GPIO_Pin_8,      /* R8 is exclusively used for the CAPS LOCK aka ASCII/DIN key */
         GPIOC, GPIO_Pin_2,      /* K1 special "row 9" used for scanning the CURSOR UP key */
         GPIOC, GPIO_Pin_3       /* K2 special "row 10" used for scanning the CURSOR LEFT key */
     };
@@ -99,12 +99,40 @@ int main(void)
     {
         GPIOC, GPIO_Pin_15      /* RESTORE key */
     };
-    
-    
+        
+    /* joystick mapping: GPIO => nibble-pos and bit-pos
+        nbl #18 : joystick 1 : bit0=left, bit1=right, bit2=up, bit3=down
+        nbl #19 : bit0=joy1 fire, bit2=capslock key status, bit3=restore key status
+        nbl #20 : joystick 2 : bit0=left, bit1=right, bit2=up, bit3=down
+        nbl #21 : bit0=joy2 fire, bit3=reset momentary-action switch status
+    */  
+    const char Size_JoyMapping = 10;    
+    struct
+    {
+        GPIO_TypeDef* GPIOx;
+        uint16_t GPIO_Pin;
+        char nibble_count;
+        char bit_count;
+    } Joystick[Size_JoyMapping] =
+    {
+        GPIOC, GPIO_Pin_6,  18, 2,  /* Joystick #1 LEFT */
+        GPIOC, GPIO_Pin_7,  18, 3,  /* Joystick #1 RIGHT */
+        GPIOC, GPIO_Pin_4,  18, 0,  /* Joystick #1 UP */
+        GPIOC, GPIO_Pin_5,  18, 1,  /* Joystick #1 DOWN */
+        GPIOC, GPIO_Pin_12, 19, 0,  /* Joystick #1 BUTTON */
+        
+        GPIOC, GPIO_Pin_10, 20, 2,  /* Joystick #2 LEFT */
+        GPIOC, GPIO_Pin_11, 20, 3,  /* Joystick #2 RIGHT */
+        GPIOC, GPIO_Pin_9 , 20, 0,  /* Joystick #2 UP */
+        GPIOC, GPIO_Pin_8,  20, 1,  /* Joystick #2 DOWN */
+        GPIOC, GPIO_Pin_13, 21, 0   /* Joystick #2 BUTTON */
+    };
+        
     /* positions of special keys within the matrix */
     const char COL_CSR = 0;
     const char ROW_CSR_UP = 9;
     const char ROW_CSR_LEFT = 10;
+    const char ROW_CAPSLOCK = 8;
     
     /* positions of special keys within the nibbles array */
     const char NIBBLE_CSR_DOWN = 1;
@@ -115,6 +143,8 @@ int main(void)
     const char BIT_RIGHT_SHIFT = 0;
     const char NIBBLE_RESTORE = 19;
     const char BIT_RESTORE = 3;
+    const char NIBBLE_CAPSLOCK = 19;
+    const char BIT_CAPSLOCK = 2;
     
     int i, col, row, nibble_cnt, bit_cnt;
             
@@ -133,9 +163,17 @@ int main(void)
         TM_GPIO_Init(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
     for (i = 0; i < Size_RowMapping; i++)
         TM_GPIO_Init(Rows_C65[i].GPIOx, Rows_C65[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN, TM_GPIO_Speed_High);
+        
+    /* row 8 is exclusively used for CAPS LOCK (aka ASCII/DIN) and has inverse logic
+      (pulled to GND when the key is pressed), so use pullup resistor */
+    TM_GPIO_Init(Rows_C65[ROW_CAPSLOCK].GPIOx, Rows_C65[ROW_CAPSLOCK].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
     
     /* The RESTORE key is pulled to GND when pressed, so we need a pullup resistor */
     TM_GPIO_Init(Restore_C65.GPIOx, Restore_C65.GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
+    
+    /* Joysticks are inverse logic, too, therefore pullup resistors are needed for the inputs */
+    for (i = 0; i < Size_JoyMapping; i++)
+        TM_GPIO_Init(Joystick[i].GPIOx, Joystick[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
     
     /* Initialize outputs for communicating with the FPGA via GPIO port JB for debugging    
         JB1  = PG8: clock; data must be valid before rising edge
@@ -190,17 +228,21 @@ int main(void)
         /* matrix scan the keyboard */
         nibble_cnt = 0;
         bit_cnt = 0;
-        for (col = 0; col < 8; col++)
+        for (col = 0; col < Size_ColMapping; col++)
         {
-            /* set all columns to LOW except the currently active one */            
-            for (i = 0; i < 8; i++)
+            /* set all columns to LOW except the currently active one */
+            for (i = 0; i < Size_ColMapping; i++)
                 TM_GPIO_SetPinValue(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, (i == col) ? 1 : 0);
                      
-            /* perform standard row scanning as the MEGA65 can handle that in an untranslated (raw) way */
+            /* perform standard row scanning as the MEGA65 can handle that in an untranslated (raw) way
+               deliberately only scan rows 0..7 as row 8 is only for CAPS LOCK (ASCII/DIN), which needs a special treatment */            
             for (row = 0; row < 8; row++)
             {
                 if (TM_GPIO_GetInputPinValue(Rows_C65[row].GPIOx, Rows_C65[row].GPIO_Pin) == 1)
+                {
                     DM_SET_BIT(nibble_cnt, bit_cnt);
+                  	TM_SWO_Printf("Key: col=%i, row=%i, nibble=%i, bit=%i.\n", col, row, nibble_cnt, bit_cnt);
+                }
                 else
                     DM_CLR_BIT(nibble_cnt, bit_cnt);
                 
@@ -232,27 +274,49 @@ int main(void)
             DM_SET_BIT(NIBBLE_CSR_RIGHT, BIT_CSR_RIGHT);
             DM_SET_BIT(NIBBLE_RIGHT_SHIFT, BIT_RIGHT_SHIFT);            
         }
+        Delay(1);
         
         /* handle RESTORE key (inverse logic) */
         if (TM_GPIO_GetInputPinValue(Restore_C65.GPIOx, Restore_C65.GPIO_Pin) == 0)
             DM_SET_BIT(NIBBLE_RESTORE, BIT_RESTORE);
         else
             DM_CLR_BIT(NIBBLE_RESTORE, BIT_RESTORE);
+        Delay(1);
+        
+        /* handle CAPS LOCK (aka ASCII/DIN) (inverse logic */
+        if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CAPSLOCK].GPIOx, Rows_C65[ROW_CAPSLOCK].GPIO_Pin) == 0)
+            DM_SET_BIT(NIBBLE_CAPSLOCK, BIT_CAPSLOCK);
+        else
+            DM_CLR_BIT(NIBBLE_CAPSLOCK, BIT_CAPSLOCK);
+        Delay(1);
+        
+        /* handle joysticks */
+        for (i = 0; i < Size_JoyMapping; i++)
+        {
+            if (TM_GPIO_GetInputPinValue(Joystick[i].GPIOx, Joystick[i].GPIO_Pin) == 0)
+            {
+                DM_SET_BIT(Joystick[i].nibble_count, Joystick[i].bit_count);
+              	TM_SWO_Printf("Joystick: i=%i, nibble=%i, bit=%i.\n", i, Joystick[i].nibble_count, Joystick[i].bit_count);
+            }
+            else
+                DM_CLR_BIT(Joystick[i].nibble_count, Joystick[i].bit_count);
+            Delay(1);
+        }
                         
         /* transmit current keyboard state to FPGA */
         for (i = 0; i < 32; i++)
         {
-            FPGA_OUT(P_CLOCK, 0);
+            FPGA_OUT(P_CLOCK, 0);                                   /* clock = 0 while data is being assembled */            
+            FPGA_OUT(P_START, (i == 0) ? 1 : 0);                    /* start of sequence = 1 at the very first nibble */
             
-            FPGA_OUT(P_START, (i == 0) ? 1 : 0);
-            FPGA_OUT(P_OUT_B0, (nibbles[i] & 0x01) ? 0 : 1);
+            FPGA_OUT(P_OUT_B0, (nibbles[i] & 0x01) ? 0 : 1);        /* set data lines and use inverse logic */
             FPGA_OUT(P_OUT_B1, (nibbles[i] & 0x02) ? 0 : 1);
             FPGA_OUT(P_OUT_B2, (nibbles[i] & 0x04) ? 0 : 1);
             FPGA_OUT(P_OUT_B3, (nibbles[i] & 0x08) ? 0 : 1);
                             
-            Delay(1);            
-            FPGA_OUT(P_CLOCK, 1);            
-            Delay(1);
+            Delay(1);                                               /* wait for everything to settle ... */
+            FPGA_OUT(P_CLOCK, 1);                                   /* ... then clock = 1 to trigger the FPGA to read */
+            Delay(1);                                               /* give the FPGA's flip/flops some time to read the data */
         }
     }
 }
