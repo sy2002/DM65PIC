@@ -33,11 +33,17 @@ on YouTube: [https://youtu.be/5PpsEw80j3M](https://youtu.be/5PpsEw80j3M).
 00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS  STM32 CMSIS and standard peripheral drivers
 00-STM32F429_LIBRARIES                    Tilen Majerle's STM32F4 library
 01-DM65PIC                                Firmware for the DM65PIC
+bin                                       Firmware binary and how-to-flash documentation
 eagle                                     Hardware design for the PCB
 ```
 
 The actual firmware is located within the file `main.c` in the folder
 `01-DM65PIC/01-DM65PIC/User`.
+
+### How to flash
+In the folder `bin` you always find the latest binary version of the firmware
+as a `.hex` file. There is also the file `bin/README.md` that explains you
+how to flash the DM65PIC firmware using a Windows, OSX or Linux machine.
 
 ### How to build
 We used the free version of [Keil uVision5](http://www.keil.com/uvision/).
