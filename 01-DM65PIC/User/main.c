@@ -57,16 +57,18 @@ int main(void)
     };
     
     
-    /* map the pins of the DM65PIC to the columns and rows of the C65 keyboard */
+    /* map the pins of the DM65PIC to the columns and rows of the C65 and C64 keyboard
+       a very good source of information is chapter 2.1.2 in the following document:
+       http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt */
     
     struct GPIO_Mapping
     {
-        GPIO_TypeDef* GPIOx;
-        uint16_t GPIO_Pin;
+        GPIO_TypeDef* GPIOx;    /* STM32 GPIO port */
+        uint16_t GPIO_Pin;      /* pin within the specified GPIO port */
     };
     
-    const char Size_ColMapping = 9;
-    struct GPIO_Mapping Columns_C65[Size_ColMapping] =
+    const char Size_ColMapping_C65 = 9;
+    struct GPIO_Mapping Columns_C65[Size_ColMapping_C65] =
     {
         GPIOE, GPIO_Pin_9,      /* C0 */
         GPIOE, GPIO_Pin_10,     /* C1 */
@@ -78,9 +80,9 @@ int main(void)
         GPIOC, GPIO_Pin_0,      /* C7 */
         GPIOC, GPIO_Pin_1       /* C8 */
     };
-    
-    const char Size_RowMapping = 11;
-    struct GPIO_Mapping Rows_C65[Size_RowMapping] =
+        
+    const char Size_RowMapping_C65 = 11;
+    struct GPIO_Mapping Rows_C65[Size_RowMapping_C65] =
     {
         GPIOE, GPIO_Pin_0,      /* R0 */
         GPIOE, GPIO_Pin_1,      /* R1 */
@@ -100,11 +102,46 @@ int main(void)
         GPIOC, GPIO_Pin_15      /* RESTORE key */
     };
         
-    /* joystick mapping: GPIO => nibble-pos and bit-pos
+    const char Size_ColMapping_C64 = 8;
+    struct GPIO_Mapping Columns_C64[Size_ColMapping_C64] =
+    {
+        GPIOD, GPIO_Pin_8,      /* C0 */
+        GPIOD, GPIO_Pin_9,      /* C1 */
+        GPIOD, GPIO_Pin_10,     /* C2 */
+        GPIOD, GPIO_Pin_11,     /* C3 */
+        GPIOD, GPIO_Pin_12,     /* C4 */
+        GPIOD, GPIO_Pin_13,     /* C5 */
+        GPIOD, GPIO_Pin_14,     /* C6 */
+        GPIOD, GPIO_Pin_15      /* C7 */
+    };
+        
+    const char Size_RowMapping_C64 = 8;
+    struct GPIO_Mapping Rows_C64[Size_RowMapping_C64] =
+    {
+        GPIOD, GPIO_Pin_0,      /* R0 */
+        GPIOD, GPIO_Pin_1,      /* R1 */
+        GPIOD, GPIO_Pin_2,      /* R2 */
+        GPIOD, GPIO_Pin_3,      /* R3 */
+        GPIOD, GPIO_Pin_4,      /* R4 */
+        GPIOD, GPIO_Pin_5,      /* R5 */
+        GPIOD, GPIO_Pin_6,      /* R6 */
+        GPIOD, GPIO_Pin_7       /* R7 */        
+    };
+    
+    struct GPIO_Mapping Restore_C64 =
+    {
+        GPIOC, GPIO_Pin_14      /* RESTORE key */
+    };    
+            
+    /* joystick mapping at the FPGA's JB port: GPIO => nibble-pos and bit-pos
         nbl #18 : joystick 1 : bit0=up, bit1=down, bit2=left, bit3=right
         nbl #19 : bit0=joy1 fire, bit2=capslock key status, bit3=restore key status
         nbl #20 : joystick 2 : bit0=up, bit1=down, bit2=left, bit3=right
         nbl #21 : bit0=joy2 fire, bit3=reset momentary-action switch status
+    
+       in C65 mode, which is the default, port #1 and #2 are swapped due to the
+       way, how the DM65PIC is located in the MEGA65 body housing; this is why
+       in below-mentioned table, joystick #1's left is going to nbl #20 instead of #18
     */  
     const char Size_JoyMapping = 10;    
     struct
@@ -115,17 +152,17 @@ int main(void)
         char bit_count;
     } Joystick[Size_JoyMapping] =
     {
-        GPIOC, GPIO_Pin_6,  18, 2,  /* Joystick #1 LEFT */
-        GPIOC, GPIO_Pin_7,  18, 3,  /* Joystick #1 RIGHT */
-        GPIOC, GPIO_Pin_4,  18, 0,  /* Joystick #1 UP */
-        GPIOC, GPIO_Pin_5,  18, 1,  /* Joystick #1 DOWN */
-        GPIOC, GPIO_Pin_12, 19, 0,  /* Joystick #1 BUTTON */
+        GPIOC, GPIO_Pin_6,  20, 2,  /* Joystick #1 LEFT */
+        GPIOC, GPIO_Pin_7,  20, 3,  /* Joystick #1 RIGHT */
+        GPIOC, GPIO_Pin_4,  20, 0,  /* Joystick #1 UP */
+        GPIOC, GPIO_Pin_5,  20, 1,  /* Joystick #1 DOWN */
+        GPIOC, GPIO_Pin_12, 21, 0,  /* Joystick #1 BUTTON */
         
-        GPIOC, GPIO_Pin_10, 20, 2,  /* Joystick #2 LEFT */
-        GPIOC, GPIO_Pin_11, 20, 3,  /* Joystick #2 RIGHT */
-        GPIOC, GPIO_Pin_9 , 20, 0,  /* Joystick #2 UP */
-        GPIOC, GPIO_Pin_8,  20, 1,  /* Joystick #2 DOWN */
-        GPIOC, GPIO_Pin_13, 21, 0   /* Joystick #2 BUTTON */
+        GPIOC, GPIO_Pin_10, 18, 2,  /* Joystick #2 LEFT */
+        GPIOC, GPIO_Pin_11, 18, 3,  /* Joystick #2 RIGHT */
+        GPIOC, GPIO_Pin_9 , 18, 0,  /* Joystick #2 UP */
+        GPIOC, GPIO_Pin_8,  18, 1,  /* Joystick #2 DOWN */
+        GPIOC, GPIO_Pin_13, 19, 0   /* Joystick #2 BUTTON */
     };
         
     /* positions of special keys within the matrix */
@@ -147,6 +184,12 @@ int main(void)
     const char BIT_CAPSLOCK = 2;
     
     int i, col, row, nibble_cnt, bit_cnt;
+    int tmp_offs, tmp_nbl, tmp_bit;
+    
+    /* if ever any key of a C64 keyboard has been pressed, then DM64PIC switches into
+       a dedicated C64 mode that swaps back the joystick ports to their "natural" (aka as printed on the PBC)
+       order because when the DM65PIC is located in a C64 body housing, the ports are placed correctly */
+    char C64_Mode = 0;
             
 	/* Initialize System */
 	SystemInit();
@@ -159,10 +202,14 @@ int main(void)
        by checking, if the current from the column arrives at a certain row. That means, we configure
        all rows as outputs (no pullup/pulldown resistor) and all columns as inputs (pulldown resistor)
     */
-    for (i = 0; i < Size_ColMapping; i++)
+    for (i = 0; i < Size_ColMapping_C65; i++)
         TM_GPIO_Init(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
-    for (i = 0; i < Size_RowMapping; i++)
+    for (i = 0; i < Size_RowMapping_C65; i++)
         TM_GPIO_Init(Rows_C65[i].GPIOx, Rows_C65[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN, TM_GPIO_Speed_High);
+    for (i = 0; i < Size_ColMapping_C64; i++)
+        TM_GPIO_Init(Columns_C64[i].GPIOx, Columns_C64[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
+    for (i = 0; i < Size_RowMapping_C64; i++)
+        TM_GPIO_Init(Rows_C64[i].GPIOx, Rows_C64[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN, TM_GPIO_Speed_High);
         
     /* row 8 is exclusively used for CAPS LOCK (aka ASCII/DIN) and has inverse logic
       (pulled to GND when the key is pressed), so use pullup resistor */
@@ -170,7 +217,8 @@ int main(void)
     
     /* The RESTORE key is pulled to GND when pressed, so we need a pullup resistor */
     TM_GPIO_Init(Restore_C65.GPIOx, Restore_C65.GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
-    
+    TM_GPIO_Init(Restore_C64.GPIOx, Restore_C64.GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
+        
     /* Joysticks are inverse logic, too, therefore pullup resistors are needed for the inputs */
     for (i = 0; i < Size_JoyMapping; i++)
         TM_GPIO_Init(Joystick[i].GPIOx, Joystick[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
@@ -228,21 +276,56 @@ int main(void)
         /* matrix scan the keyboard */
         nibble_cnt = 0;
         bit_cnt = 0;
-        for (col = 0; col < Size_ColMapping; col++)
+        for (col = 0; col < Size_ColMapping_C65; col++)
         {
             /* set all columns to LOW except the currently active one */
-            for (i = 0; i < Size_ColMapping; i++)
+            for (i = 0; i < Size_ColMapping_C65; i++)
+            {
                 TM_GPIO_SetPinValue(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, (i == col) ? 1 : 0);
+                if (i < Size_ColMapping_C64)
+                    TM_GPIO_SetPinValue(Columns_C64[i].GPIOx, Columns_C64[i].GPIO_Pin, (i == col) ? 1 : 0);                    
+            }
                      
             /* perform standard row scanning as the MEGA65 can handle that in an untranslated (raw) way
-               deliberately only scan rows 0..7 as row 8 is only for CAPS LOCK (ASCII/DIN), which needs a special treatment */            
+               deliberately only scan rows 0..7 as row 8 is only for CAPS LOCK (ASCII/DIN), which needs a special treatment 
+               plus: this way of doing it elegantly enables us to scan the C64 rows in parallel */            
             for (row = 0; row < 8; row++)
             {
-                if (TM_GPIO_GetInputPinValue(Rows_C65[row].GPIOx, Rows_C65[row].GPIO_Pin) == 1)
+                /* Commodore 65 */
+                if (TM_GPIO_GetInputPinValue(Rows_C65[row].GPIOx, Rows_C65[row].GPIO_Pin) == 1)                    
                 {
+                    /* a key is pressed, so set the corresponding matrix bit */
                     DM_SET_BIT(nibble_cnt, bit_cnt);
-                  	TM_SWO_Printf("Key: col=%i, row=%i, nibble=%i, bit=%i.\n", col, row, nibble_cnt, bit_cnt);
+                  	TM_SWO_Printf("C65 Key: col=%i, row=%i, nibble=%i, bit=%i.\n", col, row, nibble_cnt, bit_cnt);
                 }
+                
+                /* Commodore 64 */
+                else if (col < Size_ColMapping_C64 ? TM_GPIO_GetInputPinValue(Rows_C64[row].GPIOx, Rows_C64[row].GPIO_Pin) == 1 : 0)
+                {    
+                    /* detect the C64 mode */
+                    if (!C64_Mode)
+                    {
+                        C64_Mode = 1;
+                        TM_SWO_Printf("C64 mode detected. Swapping joystick ports back to normal.\n");
+                        
+                        for (i = 0; i < Size_JoyMapping / 2; i++)
+                        {
+                            tmp_offs = (Size_JoyMapping / 2) + i;
+                            tmp_nbl = Joystick[i].nibble_count;
+                            tmp_bit = Joystick[i].bit_count;
+                            Joystick[i].nibble_count = Joystick[tmp_offs].nibble_count;
+                            Joystick[i].bit_count = Joystick[tmp_offs].bit_count;
+                            Joystick[tmp_offs].nibble_count = tmp_nbl;
+                            Joystick[tmp_offs].bit_count = tmp_bit;
+                        }
+                    }
+                    
+                    /* a key is pressed, so set the corresponding matrix bit */
+                    DM_SET_BIT(nibble_cnt, bit_cnt);
+                  	TM_SWO_Printf("C64 Key: col=%i, row=%i, nibble=%i, bit=%i.\n", col, row, nibble_cnt, bit_cnt);                    
+                }
+                
+                /* key is released, so clear the corresponding matrix bit */
                 else
                     DM_CLR_BIT(nibble_cnt, bit_cnt);
                 
@@ -258,7 +341,7 @@ int main(void)
             }            
         }
         
-        /* handle CURSOR UP and CURSOR LEFT: to be emulated as SHIFT+CURSOR DOWN and SHIFT+CURSOR RIGHT */
+        /* C65 only: handle CURSOR UP and CURSOR LEFT: to be emulated as SHIFT+CURSOR DOWN and SHIFT+CURSOR RIGHT */
         for (i = 0; i < 8; i++)
             TM_GPIO_SetPinValue(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, (i == COL_CSR) ? 1 : 0);                
         if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CSR_UP].GPIOx, Rows_C65[ROW_CSR_UP].GPIO_Pin) == 1)
@@ -277,13 +360,14 @@ int main(void)
         Delay(1);
         
         /* handle RESTORE key (inverse logic) */
-        if (TM_GPIO_GetInputPinValue(Restore_C65.GPIOx, Restore_C65.GPIO_Pin) == 0)
+        if ((TM_GPIO_GetInputPinValue(Restore_C65.GPIOx, Restore_C65.GPIO_Pin) == 0) ||
+            (TM_GPIO_GetInputPinValue(Restore_C64.GPIOx, Restore_C64.GPIO_Pin) == 0))
             DM_SET_BIT(NIBBLE_RESTORE, BIT_RESTORE);
         else
             DM_CLR_BIT(NIBBLE_RESTORE, BIT_RESTORE);
         Delay(1);
         
-        /* handle CAPS LOCK (aka ASCII/DIN) (inverse logic */
+        /* C65 only: handle CAPS LOCK (aka ASCII/DIN) (inverse logic) */
         if (TM_GPIO_GetInputPinValue(Rows_C65[ROW_CAPSLOCK].GPIOx, Rows_C65[ROW_CAPSLOCK].GPIO_Pin) == 0)
             DM_SET_BIT(NIBBLE_CAPSLOCK, BIT_CAPSLOCK);
         else
@@ -303,7 +387,7 @@ int main(void)
             Delay(1);
         }
                         
-        /* transmit current keyboard state to FPGA */
+        /* transmit current keyboard and joystick state to FPGA */
         for (i = 0; i < 32; i++)
         {
             FPGA_OUT(P_CLOCK, 0);                                   /* clock = 0 while data is being assembled */            

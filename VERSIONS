@@ -1,3 +1,17 @@
+(WORK-IN-PROGRESS, NOT RELEASED YET) Revision #2 (dm65pic-firmware-rev2.hex) 10/xx/2015
+
+* Added support for standard Commodore 64 keyboards.
+
+WIP, TODO * Added support for the power and drive led.
+
+* Swapped the joystick ports so that they are correct when the FPGA and the
+  DM65PIC are being put into the MEGA65 body case.
+
+* If any key on a Commodore 64 keyboard is pressed, then the firmware assumes
+  that the DM65PIC is not located inside a MEGA65 body case and therefore
+  the joystick ports are swapped back, so that they are correct, when being
+  put into a Commodore 64 body case.
+
 Revision #1 (dm65pic-firmware-rev1.hex) 9/27/2015
 
 First working version: Supports the original Commodore 65 prototype keyboard
