@@ -101,9 +101,9 @@ int main(void)
     };
         
     /* joystick mapping: GPIO => nibble-pos and bit-pos
-        nbl #18 : joystick 1 : bit0=left, bit1=right, bit2=up, bit3=down
+        nbl #18 : joystick 1 : bit0=up, bit1=down, bit2=left, bit3=right
         nbl #19 : bit0=joy1 fire, bit2=capslock key status, bit3=restore key status
-        nbl #20 : joystick 2 : bit0=left, bit1=right, bit2=up, bit3=down
+        nbl #20 : joystick 2 : bit0=up, bit1=down, bit2=left, bit3=right
         nbl #21 : bit0=joy2 fire, bit3=reset momentary-action switch status
     */  
     const char Size_JoyMapping = 10;    

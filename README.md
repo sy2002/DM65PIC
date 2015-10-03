@@ -43,7 +43,8 @@ The actual firmware is located within the file `main.c` in the folder
 ### How to flash
 In the folder `bin` you always find the latest binary version of the firmware
 as a `.hex` file. There is also the file `bin/README.md` that explains you
-how to flash the DM65PIC firmware using a Windows, OSX or Linux machine.
+how to build a cable and how to flash the DM65PIC firmware using a Windows,
+OSX or Linux machine.
 
 ### How to build
 We used the free version of [Keil uVision5](http://www.keil.com/uvision/).
