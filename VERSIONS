@@ -1,0 +1,4 @@
+Revision #1 (dm65pic-firmware-rev1.hex) 9/27/2015
+
+First working version: Supports the original Commodore 65 prototype keyboard
+and joysticks at port #1 and #2.
