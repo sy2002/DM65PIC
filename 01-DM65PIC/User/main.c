@@ -164,6 +164,15 @@ int main(void)
         GPIOC, GPIO_Pin_8,  18, 1,  /* Joystick #2 DOWN */
         GPIOC, GPIO_Pin_13, 19, 0   /* Joystick #2 BUTTON */
     };
+    
+    struct GPIO_Mapping LEDs[2] =
+    {
+        GPIOB, GPIO_Pin_5,          /* Power LED */
+        GPIOB, GPIO_Pin_4           /* FDD LED */
+    };
+    
+    const char ledPower = 0;
+    const char ledFDD = 1;
         
     /* positions of special keys within the matrix */
     const char COL_CSR = 0;
@@ -185,6 +194,9 @@ int main(void)
     
     int i, col, row, nibble_cnt, bit_cnt;
     int tmp_offs, tmp_nbl, tmp_bit;
+        
+    char FPGA_IN_PowerLed = 0;
+    char FPGA_IN_FDDLed = 0;
     
     /* if ever any key of a C64 keyboard has been pressed, then DM64PIC switches into
        a dedicated C64 mode that swaps back the joystick ports to their "natural" (aka as printed on the PBC)
@@ -222,6 +234,10 @@ int main(void)
     /* Joysticks are inverse logic, too, therefore pullup resistors are needed for the inputs */
     for (i = 0; i < Size_JoyMapping; i++)
         TM_GPIO_Init(Joystick[i].GPIOx, Joystick[i].GPIO_Pin, TM_GPIO_Mode_IN, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_High);
+    
+    /* Initialze outputs for LEDs */
+    TM_GPIO_Init(LEDs[ledPower].GPIOx, LEDs[ledPower].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_Low);
+    TM_GPIO_Init(LEDs[ledFDD].GPIOx, LEDs[ledFDD].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_Low);
     
     /* Initialize outputs for communicating with the FPGA via GPIO port JB for debugging    
         JB1  = PG8: clock; data must be valid before rising edge
@@ -261,16 +277,15 @@ int main(void)
     TM_GPIO_Init(GPIOG, P_OUT_B1, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);
     TM_GPIO_Init(GPIOG, P_OUT_B2, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);
     TM_GPIO_Init(GPIOG, P_OUT_B3, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
-/*
     TM_GPIO_Init(GPIOG, P_IN_B0,  TM_GPIO_Mode_IN,  TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN,   TM_GPIO_Speed_High);
     TM_GPIO_Init(GPIOG, P_IN_B1,  TM_GPIO_Mode_IN,  TM_GPIO_OType_PP, TM_GPIO_PuPd_DOWN,   TM_GPIO_Speed_High);
-*/
 
     /* convenience defines for a better readability */
-    #define FPGA_OUT(__pin, __value) TM_GPIO_SetPinValue(GPIOG, __pin, __value)    
+    #define FPGA_OUT(__pin, __value) TM_GPIO_SetPinValue(GPIOG, __pin, __value)
+    #define FPGA_IN(__pin) TM_GPIO_GetInputPinValue(GPIOG, __pin)
     #define DM_SET_BIT(__nibblepos, __bitpos) nibbles[(__nibblepos)] = nibbles[(__nibblepos)] | (1 << (__bitpos))
     #define DM_CLR_BIT(__nibblepos, __bitpos) nibbles[(__nibblepos)] = nibbles[(__nibblepos)] & (~(1 << (__bitpos)))
-    
+        
     while(1)
     {
         /* matrix scan the keyboard */
@@ -386,8 +401,13 @@ int main(void)
                 DM_CLR_BIT(Joystick[i].nibble_count, Joystick[i].bit_count);
             Delay(1);
         }
-                        
-        /* transmit current keyboard and joystick state to FPGA */
+        
+        /* handle the LEDs */
+        TM_GPIO_SetPinValue(LEDs[ledPower].GPIOx, LEDs[ledPower].GPIO_Pin, FPGA_IN_PowerLed);
+        TM_GPIO_SetPinValue(LEDs[ledFDD].GPIOx, LEDs[ledFDD].GPIO_Pin, FPGA_IN_FDDLed);
+        Delay(1);
+                
+        /* transmit current keyboard and joystick state to FPGA and read the LED status from the FPGA */
         for (i = 0; i < 32; i++)
         {
             FPGA_OUT(P_CLOCK, 0);                                   /* clock = 0 while data is being assembled */            
@@ -398,9 +418,16 @@ int main(void)
             FPGA_OUT(P_OUT_B2, (nibbles[i] & 0x04) ? 0 : 1);
             FPGA_OUT(P_OUT_B3, (nibbles[i] & 0x08) ? 0 : 1);
                             
-            Delay(1);                                               /* wait for everything to settle ... */
-            FPGA_OUT(P_CLOCK, 1);                                   /* ... then clock = 1 to trigger the FPGA to read */
+            Delay(1);                                               /* wait for everything to settle ... */            
+            FPGA_OUT(P_CLOCK, 1);                                   /* ... then clock = 1 to trigger the FPGA to read */                                    
             Delay(1);                                               /* give the FPGA's flip/flops some time to read the data */
+            
+            /* read the LED status */
+            if (i == 0)
+            {
+                FPGA_IN_PowerLed = FPGA_IN(P_IN_B0);
+                FPGA_IN_FDDLed   = FPGA_IN(P_IN_B1);                
+            }            
         }
     }
 }

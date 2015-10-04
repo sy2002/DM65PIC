@@ -1,8 +1,8 @@
-(WORK-IN-PROGRESS, NOT RELEASED YET) Revision #2 (dm65pic-firmware-rev2.hex) 10/xx/2015
+Revision #2 (dm65pic-firmware-rev2.hex) 10/04/2015
 
 * Added support for standard Commodore 64 keyboards.
 
-WIP, TODO * Added support for the power and drive led.
+* Added support for the power and floppy disk drive (FDD) LEDs.
 
 * Swapped the joystick ports so that they are correct when the FPGA and the
   DM65PIC are being put into the MEGA65 body case.

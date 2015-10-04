@@ -867,14 +867,14 @@ ARM Macro Assembler    Page 14
               00000400 
               00000400 
               00000000 
-Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
-erwork --depend=.\targets\stm32f4_discovery\startup_stm32f40_41xxx.d -o.\target
-s\stm32f4_discovery\startup_stm32f40_41xxx.o -I\\psf\Home\Documents\Privat\GNR\
-dev\MEGA65\DM65PIC\01-DM65PIC\RTE -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.5.
-0\Drivers\CMSIS\Device\ST\STM32F4xx\Include -IC:\Keil_v5\ARM\CMSIS\Include --pr
-edefine="__UVISION_VERSION SETA 516" --predefine="STM32F407xx SETA 1" --list=.\
-startup_stm32f40_41xxx.lst ..\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\De
-vice\ST\STM32F4xx\Source\Templates\arm\startup_stm32f40_41xxx.s
+Command Line: --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=interwork -
+-depend=.\targets\stm32f4_discovery\startup_stm32f40_41xxx.d -o.\targets\stm32f
+4_discovery\startup_stm32f40_41xxx.o -I\\psf\Home\Documents\Privat\GNR\dev\MEGA
+65\DM65PIC\01-DM65PIC\RTE -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.5.0\Driver
+s\CMSIS\Device\ST\STM32F4xx\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine=
+"__UVISION_VERSION SETA 516" --predefine="STM32F407xx SETA 1" --list=.\startup_
+stm32f40_41xxx.lst ..\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Device\ST\
+STM32F4xx\Source\Templates\arm\startup_stm32f40_41xxx.s
 
 
 

@@ -12,7 +12,9 @@ What you need
    USB port of your PC, Mac or Linux device.
 
 2. You need a cable that maps the 20-pin connector of the ST-LINK device
-   to the 6-pin connector on the DM65PIC board.
+   to the 6-pin connector on the DM65PIC board. (Depending on the type of your
+   ST-LINK device, you might only need to connect 4 or 5 of the 6 pins on the
+   DM65PIC.)
 
 3. You need either the original STLINK tool, if you're using Windows or
    the Open Source tool OpenOCD, if you're using OSX or Linux.
@@ -32,8 +34,12 @@ side of things are below.
 
 Let's focus on the cable first: Most ST-LINK devices come with some kind of
 a 20-pin connector. We don't need all of these 20 pins to program the DM65PIC,
-but just 5 of them are really essential. Optionally, we can connect pin 6,
-which then can be used to display debug- and trace-output on a console.
+but just 4 or 5 of them are really essential. Optionally, we can connect
+pin 6, which then can be used to display debug- and trace-output on a console.
+
+The original ST-LINK device needs 5 pins as it needs the +3.3 volt line. In
+contrast to this, some Chinese clones do not need the +3.3 volt line, so that
+4 pins are sufficient for these devices (pins 1 and 6 are omitted).
 
 The following picture is showing you, where to find the 6-pin connector on the
 DM65PIC board. You are counting the 6 pins from top to bottom:
@@ -72,14 +78,15 @@ connectors, then the mapping is as follows:
 
 ```
    DM65PIC       ST-LINK
-       1   --->     1
+      *1   --->     1
        2   --->     9
        3   --->     6
        4   --->     7
        5   --->    15
-      *6   --->   *13
+     **6   --->    13
 
-(*) optional connection, only used for tracing/debugging (ARM Semihosting)
+(*)  not needed when using some Chinese clones
+(**) optional connection, only used for tracing/debugging (ARM Semihosting)
 ```
 
 Make sure, that you are counting the pins on the ST-LINK connector in the
@@ -108,7 +115,7 @@ Windows
 
 7. Choose "Program & Verify" from the "Target" menu
 
-8. Choose the `dm65pic-firmware-rev1.hex` file
+8. Choose the `dm65pic-firmware-rev2.hex` file
 
 9. Select "Verify after programming" and make sure that "Reset after
    programming" is checked.
