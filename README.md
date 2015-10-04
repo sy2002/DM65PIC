@@ -11,8 +11,8 @@ The DM65PIC is the peripheral interface controller for the MEGA65 computer.
 It is based on the [STM32F4 microcontroller](http://www.st.com/stm32f4).
 
 The purpose of the DM65PIC is to provide an interface to an original
-Commodore 65 prototype keyboard and to provide joystick ports. Future versions
-will also be able to work with standard C64 keyboards and with the MEGA65
+Commodore 65 prototype keyboard or a standard C64 keyboard and to provide
+joystick ports. Future versions will also be able to work with the MEGA65
 custom keyboard and these keyboards will also be able to be used as standard
 USB HID devices e.g. while using emulators. Additionally we will implement the
 Commodore 65 user port in future versions.
