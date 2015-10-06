@@ -115,7 +115,7 @@ Windows
 
 7. Choose "Program & Verify" from the "Target" menu
 
-8. Choose the `dm65pic-firmware-rev2.hex` file
+8. Choose the `dm65pic-firmware-rev3.hex` file
 
 9. Select "Verify after programming" and make sure that "Reset after
    programming" is checked.

@@ -403,8 +403,8 @@ int main(void)
         }
         
         /* handle the LEDs */
-        TM_GPIO_SetPinValue(LEDs[ledPower].GPIOx, LEDs[ledPower].GPIO_Pin, FPGA_IN_PowerLed);
-        TM_GPIO_SetPinValue(LEDs[ledFDD].GPIOx, LEDs[ledFDD].GPIO_Pin, FPGA_IN_FDDLed);
+        TM_GPIO_SetPinValue(LEDs[ledPower].GPIOx, LEDs[ledPower].GPIO_Pin, FPGA_IN_PowerLed ? 0 : 1);
+        TM_GPIO_SetPinValue(LEDs[ledFDD].GPIOx, LEDs[ledFDD].GPIO_Pin, FPGA_IN_FDDLed ? 0 : 1);
         Delay(1);
                 
         /* transmit current keyboard and joystick state to FPGA and read the LED status from the FPGA */

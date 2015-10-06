@@ -1,3 +1,14 @@
+Revision #3 (dm65pic-firmware-rev3.hex) 10/06/2015
+
+* Inverted the logic of the power and FDD LEDs: the firmware pulls the lines
+  now to GND, if we want the LEDs to be ON. Reason: The original Commodore 65
+  prototype keyboard has a very strange 12V LED circuit, which cannot be
+  driven by the STM32 on the DM65PIC, so we needed to do some hardware hacks.
+  This firmware revision is compatible with these hardware hacks.
+
+  You might want to stick to firmware revision #2, if you're keyboard has
+  LEDs that behave "normally" or if you just don't care about the LEDs.
+
 Revision #2 (dm65pic-firmware-rev2.hex) 10/04/2015
 
 * Added support for standard Commodore 64 keyboards.
