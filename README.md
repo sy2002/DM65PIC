@@ -65,7 +65,8 @@ resistor).
 
 The following diagram is the basis for the matrix scan. It is taken from
 Commodore's original document
-[c65manual.txt](http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt),
+[c65manual.txt](http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt)
+([permalink](https://perma.cc/E5R3-MEXA)),
 chapter 2.1.2.
 
 ```
