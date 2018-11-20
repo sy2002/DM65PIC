@@ -59,8 +59,8 @@ should be able to build without further modifications.
 The DM65PIC is doing a matrix scan on the original Commodore 65 keyboard by
 letting current flow through the columns and then find out if a key is pressed
 by checking, if the current from the column arrives at a certain row. That
-means, we configure all "row pins" of the STM32 microcontroller as outputs
-(no pullup/pulldown resistor) and all "column pins" as inputs (pulldown
+means, we configure all "column pins" of the STM32 microcontroller as outputs
+(no pullup/pulldown resistor) and all "row pins" as inputs (pulldown
 resistor).
 
 The following diagram is the basis for the matrix scan. It is taken from

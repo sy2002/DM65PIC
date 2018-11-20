@@ -218,7 +218,7 @@ int main(void)
     
     /* The matrix scan goes like this: let current flow through the columns and then find out if a key is pressed
        by checking, if the current from the column arrives at a certain row. That means, we configure
-       all rows as outputs (no pullup/pulldown resistor) and all columns as inputs (pulldown resistor)
+       all columns as outputs (no pullup/pulldown resistor) and all rows as inputs (pulldown resistor)
     */
     for (i = 0; i < Size_ColMapping_C65; i++)
         TM_GPIO_Init(Columns_C65[i].GPIOx, Columns_C65[i].GPIO_Pin, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_NOPULL, TM_GPIO_Speed_High);    
