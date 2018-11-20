@@ -197,5 +197,5 @@ JB10 = PG15: bit 1 of input bit pair
 
 Special thanks go to [Tilen Majerle](https://github.com/MaJerle) for
 supporting sy2002 in learning how to work with the STM32 toolchain and of
-course for creating the awesome [STM32F4 library](http://stm32f4-discovery.com)
+course for creating the awesome [STM32F4 library](https://stm32f4-discovery.net)
 that we heavily used for creating the DM65PIC firmware.
