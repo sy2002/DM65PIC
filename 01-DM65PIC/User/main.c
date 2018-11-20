@@ -59,7 +59,13 @@ int main(void)
     
     /* map the pins of the DM65PIC to the columns and rows of the C65 and C64 keyboard
        a very good source of information is chapter 2.1.2 in the following document:
-       http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt */
+
+       http://www.zimmers.net/cbmpics/cbm/c65/c65manual.txt 
+       
+       or use this permalink
+
+       https://perma.cc/E5R3-MEXA
+    */
     
     struct GPIO_Mapping
     {
