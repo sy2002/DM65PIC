@@ -6,6 +6,10 @@ MEGA65 is an open-source new and open C65-like computer.
 All hardware designs and all software are open-source (LGPL).
 Please visit www.mega65.org to learn more about it.
 
+## Quickstart
+
+Click here: [How to flash the firmware on the DM65PIC](bin/README.md)
+
 ## DM65PIC Peripheral Interface Controller
 The DM65PIC is the peripheral interface controller for the MEGA65 computer.
 It is based on the [STM32F4 microcontroller](http://www.st.com/stm32f4).
